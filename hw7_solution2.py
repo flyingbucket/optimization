@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.optimize import minimize_scalar
 # f(x)=(10x1^2+x2^2)/2
-# f'(x)=10x1+x2
 
 
 def f(x1, x2):
@@ -12,20 +10,18 @@ def grad_f(x1, x2):
     return np.array((10 * x1, x2))
 
 
-def phi(z, point):
-    arr = point - z * grad_f(*point)
-    return f(*arr)
+H = np.array([[10, 0], [0, 1]])
 
 
-def steepest_decrease(start, err):
+def newton(start, err):
     x = start.copy()
     grad = grad_f(*x)
     grad_norm = np.linalg.norm(grad)
     iteration = 0
     while grad_norm**2 >= err:
         iteration += 1
-        res = minimize_scalar(phi, args=(x,))
-        x = x - res.x * grad
+        z = (grad @ grad) / (grad @ H @ grad)
+        x = x - z * grad
         grad = grad_f(*x)
         grad_norm = np.linalg.norm(grad)
     return x, iteration
@@ -34,7 +30,7 @@ def steepest_decrease(start, err):
 if __name__ == "__main__":
     err = 1e-10
     start = np.array([0.2, 1])
-    x, iteration = steepest_decrease(start, err)
+    x, iteration = newton(start, err)
     print("using steepest decrease method")
     print(
         f"iteration:{iteration}",
